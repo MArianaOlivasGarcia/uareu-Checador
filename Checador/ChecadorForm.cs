@@ -241,9 +241,11 @@ namespace Checador
             FeatureSet features = ExtractFeatures(Sample, DPFP.Processing.DataPurpose.Verification);
             Employee employee = AnalizeFingerprints(features);
 
-            Boolean isValid = Validations(employee);
 
             StartCapture();
+            Boolean isValid = Validations(employee);
+
+            
             if (!isValid) { return; }
 
             ProcessCheck(employee, dateTime);
@@ -394,8 +396,15 @@ namespace Checador
         {
             CheckForIllegalCrossThreadCalls = false;
 
-            employeeDao.Check(employee.Id, dateTime);
-
+            Checking lastCheck = employeeDao.Check(employee.Id, dateTime);
+            
+            if ( lastCheck != null )
+            {
+                System.Diagnostics.Debug.WriteLine(lastCheck.Id);
+                System.Diagnostics.Debug.WriteLine(lastCheck.Employee);
+                System.Diagnostics.Debug.WriteLine(lastCheck.Date);
+                System.Diagnostics.Debug.WriteLine(lastCheck.Time);
+            }
 
 
             // Buscar mensajes
@@ -404,13 +413,10 @@ namespace Checador
             Models.Message message = messageDao.FindGeneral();
 
 
-
-            //labelName.Visible = true;
-            //labelDateTime.Visible = true;
             employeeImage.Image = employee.Foto;
             txtName.Text = $"{employee.Nombre} {employee.Paterno} {employee.Materno}";
-            //txtDateTime.Text = dateTime.ToLongDateString() + " "+ dateTime.ToString("h:mm tt");
-            txtDateTime.Text = DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToString("h:mm tt");
+            // txtDateTime.Text = DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToString("h:mm tt");
+            txtDateTime.Text = lastCheck.Date.ToLongDateString() + " " + lastCheck.Time.ToString();
 
             if (messagePersonal != null)
             {
@@ -440,7 +446,7 @@ namespace Checador
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("EVENTO DEL RELOJ");
+            //System.Diagnostics.Debug.WriteLine("EVENTO DEL RELOJ");
             txtTime.Text = DateTime.Now.ToString("h:mm tt");
             txtDate.Text = DateTime.Now.ToLongDateString().ToUpper();
             TimeSpan duration = DateTime.Now - dateChecked;
@@ -471,6 +477,7 @@ namespace Checador
             employeeImage.Image = null;
 
             pictureHuella.Visible = false;
+
         }
 
     }

@@ -161,6 +161,7 @@
     <Compile Include="LoginForm.Designer.cs">
       <DependentUpon>LoginForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\Checking.cs" />
     <Compile Include="Models\ConnectionDb.cs" />
     <Compile Include="Models\Employee.cs" />
     <Compile Include="Models\EmployeeDao.cs" />

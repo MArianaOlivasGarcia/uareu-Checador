@@ -11,7 +11,7 @@ namespace Checador.Models
 {
     public class EmployeeDao: ConnectionDb
     {
-
+        
         // Buscar un empleado por ID
         public Employee FindById(int Id)
         {
@@ -83,26 +83,40 @@ namespace Checador.Models
 
 
         // Generar la checada del empleado
-        public Boolean Check(int Id, DateTime Date)
+        public Checking Check(int Id, DateTime Date)
         {
 
             MySqlConnection connection = Connection();
             MySqlCommand command = connection.CreateCommand();
 
-            command.CommandText = "INSERT INTO checadas(id_trabajador, fecha, hora) VALUES( @id, now(), now() )";
+            command.CommandText = "INSERT INTO checadas(id_trabajador, fecha, hora) VALUES( @id, now(), now() ); SELECT * FROM checadas ORDER BY id_checada DESC LIMIT 1;";
             command.Parameters.Add("@id", MySqlDbType.Int32).Value = Id;
             //command.Parameters.Add("@date", MySqlDbType.Date).Value = Date.Date;
             //command.Parameters.Add("@time", MySqlDbType.Time).Value = Date.TimeOfDay;
 
             try
             {
-                command.ExecuteReader();
-                return true;
+     
+                MySqlDataReader response = command.ExecuteReader();
+                Checking lastCheck = null;
+
+                while (response.Read())
+                {
+                    lastCheck = new Checking();
+
+                    lastCheck.Id = response.GetInt32("id_checada");
+                    lastCheck.Employee = response.GetInt32("id_trabajador");
+                    lastCheck.Date = (DateTime)response.GetMySqlDateTime("fecha");
+                    lastCheck.Time =  response.GetTimeSpan("hora");
+                }
+                    
+
+                return lastCheck;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.Message);
-                return false;
+                return null;
             }
 
         }
