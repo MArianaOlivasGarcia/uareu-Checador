@@ -2,12 +2,6 @@ C:\Users\52998\source\repos\Checador\Checador\bin\Debug\Checador.exe.config
 C:\Users\52998\source\repos\Checador\Checador\bin\Debug\Checador.exe
 C:\Users\52998\source\repos\Checador\Checador\bin\Debug\Checador.pdb
 C:\Users\52998\source\repos\Checador\Checador\bin\Debug\BouncyCastle.Crypto.dll
-C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPFPCtlXWrapperNET.dll
-C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPFPDevNET.dll
-C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPFPEngNET.dll
-C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPFPGuiNET.dll
-C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPFPShrNET.dll
-C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPFPVerNET.dll
 C:\Users\52998\source\repos\Checador\Checador\bin\Debug\Google.Protobuf.dll
 C:\Users\52998\source\repos\Checador\Checador\bin\Debug\K4os.Compression.LZ4.dll
 C:\Users\52998\source\repos\Checador\Checador\bin\Debug\K4os.Compression.LZ4.Streams.dll
@@ -54,3 +48,11 @@ C:\Users\52998\source\repos\Checador\Checador\obj\Debug\Checador.csproj.CopyComp
 C:\Users\52998\source\repos\Checador\Checador\obj\Debug\Checador.exe
 C:\Users\52998\source\repos\Checador\Checador\obj\Debug\Checador.pdb
 C:\Users\52998\source\repos\Checador\Checador\obj\Debug\Checador.csproj.AssemblyReference.cache
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPCtlUruNet.dll
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPCtlXUru.dll
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPUruNet.dll
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPXUru.dll
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPCtlUruNet.xml
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPCtlXUru.xml
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPUruNet.xml
+C:\Users\52998\source\repos\Checador\Checador\bin\Debug\DPXUru.xml

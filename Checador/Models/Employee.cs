@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,8 +23,11 @@ namespace Checador.Models
         public String Status { get; set; }
         public String Email { get; set; }
         public String CodigoTarjeta { get; set; }
-        public DPFP.Template Huella { get; set; }
-        public DPFP.Template Huella2 { get; set; }
+
+        public DPFP.Sample Huella { get; set; }
+        public string Huella1 { get; set; }
+        public DPUruNet.Fmd Huella2 { get; set; }
+        public string Huella3 { get; set; }
         public DateTime FechaIngreso { get; set; }
         public System.Drawing.Image Foto { get; set; }
     }

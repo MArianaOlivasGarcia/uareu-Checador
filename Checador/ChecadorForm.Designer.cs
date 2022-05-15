@@ -204,6 +204,7 @@
             this.pictureHuella.Location = new System.Drawing.Point(81, 115);
             this.pictureHuella.Name = "pictureHuella";
             this.pictureHuella.Size = new System.Drawing.Size(100, 101);
+            this.pictureHuella.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureHuella.TabIndex = 16;
             this.pictureHuella.TabStop = false;
             // 

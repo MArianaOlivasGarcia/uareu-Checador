@@ -26,7 +26,7 @@ namespace Checador
             txtDBUser.Text = Checador.Properties.Settings.Default.DB_USER;
             txtDBPassword.Text = Checador.Properties.Settings.Default.DB_PASSWORD;
 
-            txtTimeIp.Text = Checador.Properties.Settings.Default.TIME_SERVER;
+            //txtTimeIp.Text = Checador.Properties.Settings.Default.TIME_SERVER;
 
             txtBioIP.Text = Checador.Properties.Settings.Default.FACIAL_SERVER;
             txtBioPort.Text = Checador.Properties.Settings.Default.FACIAL_PORT;
@@ -42,7 +42,7 @@ namespace Checador
             Checador.Properties.Settings.Default.DB_USER = txtDBUser.Text;
             Checador.Properties.Settings.Default.DB_PASSWORD = txtDBPassword.Text;
 
-            Checador.Properties.Settings.Default.TIME_SERVER = txtTimeIp.Text;
+           // Checador.Properties.Settings.Default.TIME_SERVER = txtTimeIp.Text;
 
 
             Checador.Properties.Settings.Default.FACIAL_SERVER = txtBioIP.Text;

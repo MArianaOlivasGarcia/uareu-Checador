@@ -6,6 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using DPFP;
+using DPUruNet;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Checador.Models
 {
@@ -149,29 +157,89 @@ namespace Checador.Models
                 employee.Tipo = trabajadores.GetString("tipo_trabajador");
                 employee.TotalHoras = trabajadores.GetInt32("total_horas");
                 employee.Status = trabajadores.GetString("status").ToUpper();
-                employee.CodigoTarjeta = trabajadores.GetString("codigo_tarjeta").ToUpper();
+
+
                 try
                 {
+
                     byte[] b = null;
                     b = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella"));
                     ms = new System.IO.MemoryStream(b);
-                    employee.Huella = new DPFP.Template(ms);
-                }
-                catch (Exception)
-                {
 
-                }
+                    DPFP.Sample sample = new DPFP.Sample(ms);
+                    employee.Huella = sample;
 
-                try
-                {
-                    byte[] b = null;
-                    b = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella2"));
-                    ms = new System.IO.MemoryStream(b);
-                    employee.Huella2 = new DPFP.Template(ms);
+                    System.Diagnostics.Debug.WriteLine(sample);
+
+
+                    string base64 = Convert.ToBase64String(b);
+                    System.Diagnostics.Debug.WriteLine(base64);
+
+                    byte[] bytes = Convert.FromBase64String(base64);
+                    MemoryStream mssss = new MemoryStream(bytes);
+                    Image image = Image.FromStream(mssss);
+
+
+
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
+                }
+
+                try
+                {
+                    //byte[] resultFromDB = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella"));
+                    //int ConversionFormate = Convert.ToInt32(Constants.Formats.Fmd.ANSI);
+                    //employee.Huella = new Fmd(resultFromDB, ConversionFormate, Constants.WRAPPER_VERSION);
+
+                    byte[] b = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella"));
+                    DataResult<Fmd> fmd = DPUruNet.FeatureExtraction.CreateFmdFromRaw(b, 0, 1, 500, 550, 1000, Constants.Formats.Fmd.ANSI);
+
+                    employee.Huella1 = Fmd.SerializeXml(fmd.Data);
+
+               
+
+
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("AQUI H1", ex.Data + ex.Message);
+
+                }
+
+
+
+
+
+
+                try
+                {
+                    byte[] b = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella2"));
+                    DataResult<Fmd> fmd = DPUruNet.FeatureExtraction.CreateFmdFromRaw(b, 0, 1, 504, 648, 1000, Constants.Formats.Fmd.ANSI);
+                    employee.Huella2 = fmd.Data;
+
+
+
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("AQUI H2", ex.Message);
+                }
+
+
+
+
+                try
+                {
+                    byte[] b = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella3"));
+                    employee.Huella3 = System.Text.Encoding.UTF8.GetString( b );
+
+                    //System.Diagnostics.Debug.WriteLine(employee.Huella3);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("AQUI H3", ex.Message);
                 }
 
                 try
@@ -193,10 +261,18 @@ namespace Checador.Models
                 {
                     Console.WriteLine(e.Message);
                 }
+
+
+
                 employees.Add(employee);
+
             }
             return employees;
         }
+
+
+      
+
 
         // Verificar si tiene Horario
 
@@ -268,6 +344,44 @@ namespace Checador.Models
 
             return isActive;
         }
+
+
+
+
+
+
+
+        public void AddHuella(int Id, string Huella)
+        {
+
+            MySqlConnection connection = Connection();
+            MySqlCommand command = connection.CreateCommand();
+
+            command.CommandText = "UPDATE trabajadores SET  huella3 = @huella  WHERE id_trabajador = @id";
+            command.Parameters.Add("@id", MySqlDbType.Int32).Value = Id;
+            command.Parameters.Add("@huella", MySqlDbType.String).Value = Huella;
+            
+
+            try
+            {
+
+                MySqlDataReader response = command.ExecuteReader();
+               
+
+                while (response.Read())
+                {
+                 
+                }
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+              
+            }
+
+        }
+
 
 
     }

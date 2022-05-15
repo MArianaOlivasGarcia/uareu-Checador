@@ -9,26 +9,25 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using DPFP;
-using DPFP.Capture;
-using DPFP.Verification;
 using MySql.Data.MySqlClient;
 using SocketIOClient;
 using Checador.Models;
+using DPUruNet;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using DPFP;
+using DPFP.Capture;
 
 namespace Checador
 {
-    public partial class ChecadorForm : Form, DPFP.Capture.EventHandler
+    public partial class ChecadorForm : Form
     {
         // LECTOR BIOMETRICO
         private zkemkeeper.CZKEM axCZKEM1 = new zkemkeeper.CZKEM();
         private bool bIsConnected = false;
         // FIN LECTOR BIOMETRICO
 
-        // DIGITALPERSONA
-        private DPFP.Verification.Verification verificator;
-        private DPFP.Capture.Capture capturer;
-        // FIN DIGITALPERSONA
+      
 
         // SOCKET SERVIDOR HORA
         //SocketService socket = new SocketService();
@@ -54,7 +53,7 @@ namespace Checador
 
 
             timer.Start();
-         
+
             InitDigitalPersona();
             InitZKTeco();
 
@@ -76,34 +75,6 @@ namespace Checador
         }
 
 
-        // Digital Persona
-        public void InitDigitalPersona()
-        {
-            try
-            {
-                capturer = new DPFP.Capture.Capture();
-
-                if (null != capturer)
-                {
-                    capturer.EventHandler = this;
-
-                    StartCapture();
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("NO SE PUDO INICIAR LA OPERACION DE CAPTURACION");
-                }
-
-            }
-            catch
-            {
-                System.Diagnostics.Debug.WriteLine("OCURRIO UN ERROR GRAVE CAPTURACION");
-
-            }
-            verificator = new DPFP.Verification.Verification();
-
-        }
-
 
 
         // Biometrico
@@ -121,8 +92,7 @@ namespace Checador
                 DialogResult result = MessageBox.Show("No se pudo establecer conexión con lector ZKTeco. ¿Desea continuar?", "Alvertencia", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.No)
                 {
-                    StopCapture();
-                   // socket.Disconnect();
+                    //StopCapture();
                     timer.Stop();
                     Application.Exit();
                 }
@@ -164,191 +134,6 @@ namespace Checador
 
 
 
-        // Eventos digitalPersona
-
-        public Employee AnalizeFingerprints(FeatureSet features)
-        {
-            Employee employee = null;
-            Verification.Result result;
-
-            foreach (Employee e in employees)
-            {
-                result = new Verification.Result();
-
-                if (e.Huella != null)
-                {
-                    try
-                    {
-                        verificator.Verify(features, e.Huella, ref result);
-                        if (result.Verified)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Verificado huella1");
-                            return employee = e;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(ex.Message);
-
-                    }
-                }
-                result = new Verification.Result();
-                if (e.Huella2 != null)
-                {
-                    try
-                    {
-                        verificator.Verify(features, e.Huella2, ref result);
-                        if (result.Verified)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Verificado huella 2 ");
-                            return employee = e;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(ex.Message);
-
-                    }
-                }
-
-            }
-
-            return employee;
-
-        }
-
-
-
-
-        public void OnComplete(object Capture, string ReaderSerialNumber, Sample Sample)
-        {
-            System.Diagnostics.Debug.WriteLine("Lectura de huella completa");
-
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
-            
-
-            DrawHuella(ConvertSampleToBitmap(Sample));
-
-            StopCapture(); //Se detiene el proceso de captura
-
-            employeeImage.SizeMode = PictureBoxSizeMode.CenterImage;
-            employeeImage.Image = Properties.Resources.loading;
-
-            dateChecked = DateTime.Now;
-            isCheking = true;
-
-            FeatureSet features = ExtractFeatures(Sample, DPFP.Processing.DataPurpose.Verification);
-            Employee employee = AnalizeFingerprints(features);
-
-
-            StartCapture();
-            Boolean isValid = Validations(employee);
-
-            
-            if (!isValid) { return; }
-
-            ProcessCheck(employee, dateTime);
-             //Inicializar el proceso de captura
-
-        }
-
-        public void OnFingerGone(object Capture, string ReaderSerialNumber)
-        {
-            System.Diagnostics.Debug.WriteLine("OnFingerGone");
-
-        }
-
-        public void OnFingerTouch(object Capture, string ReaderSerialNumber)
-        {
-            System.Diagnostics.Debug.WriteLine("OnFingerTouch");
-
-        }
-
-        public void OnReaderConnect(object Capture, string ReaderSerialNumber)
-        {
-            System.Diagnostics.Debug.WriteLine("OnReaderConnect");
-
-        }
-
-        public void OnReaderDisconnect(object Capture, string ReaderSerialNumber)
-        {
-            System.Diagnostics.Debug.WriteLine("OnReaderDisconnect");
-
-        }
-
-        public void OnSampleQuality(object Capture, string ReaderSerialNumber, CaptureFeedback CaptureFeedback)
-        {
-            System.Diagnostics.Debug.WriteLine("OnSampleQuality");
-
-        }
-
-        public void DrawHuella(Bitmap bitmap)
-        {
-            CheckForIllegalCrossThreadCalls = false;
-
-            pictureHuella.Visible = true;
-            pictureHuella.Image = new Bitmap(bitmap, pictureHuella.Size);
-        }
-
-
-        protected Bitmap ConvertSampleToBitmap( DPFP.Sample Sample )
-        {
-            DPFP.Capture.SampleConversion Convertor = new DPFP.Capture.SampleConversion();
-            Bitmap Bitmap = null;
-            Convertor.ConvertToPicture(Sample, ref Bitmap);
-            return Bitmap;
-
-        }
-
-
-        public void StartCapture()
-        {
-            if (null != capturer)
-            {
-                try
-                {
-                    capturer.StartCapture();
-                }
-                catch
-                {
-                    System.Diagnostics.Debug.WriteLine("ERROR AL EMPEZAR CAPTURA");
-
-                }
-            }
-        }
-
-        public void StopCapture()
-        {
-            if (null != capturer)
-            {
-                try
-                {
-                    capturer.StopCapture();
-                }
-                catch
-                {
-                    System.Diagnostics.Debug.WriteLine("ERROR AL DETENER CAPTURADOR");
-
-                }
-            }
-        }
-
-
-
-
-        protected DPFP.FeatureSet ExtractFeatures(DPFP.Sample Sample, DPFP.Processing.DataPurpose Purpose)
-        {
-            DPFP.Processing.FeatureExtraction Extractor = new DPFP.Processing.FeatureExtraction();
-            DPFP.Capture.CaptureFeedback feedback = DPFP.Capture.CaptureFeedback.None;
-            DPFP.FeatureSet features = new DPFP.FeatureSet();
-
-            Extractor.CreateFeatureSet(Sample, Purpose, ref feedback, ref features);
-            if (feedback == DPFP.Capture.CaptureFeedback.Good)
-                return features;
-            else
-                return null;
-        }
 
 
 
@@ -372,7 +157,7 @@ namespace Checador
                 txtName.Text = "Empleado Inactivo. Favor de pasar a recursos humanos.";
                 employeeImage.Image = employee.Foto;
                 System.Diagnostics.Debug.WriteLine("Empleado Inactivo.");
-               // isCheking = false;
+                // isCheking = false;
                 return false;
             }
 
@@ -397,8 +182,8 @@ namespace Checador
             CheckForIllegalCrossThreadCalls = false;
 
             Checking lastCheck = employeeDao.Check(employee.Id, dateTime);
-            
-            if ( lastCheck != null )
+
+            if (lastCheck != null)
             {
                 System.Diagnostics.Debug.WriteLine(lastCheck.Id);
                 System.Diagnostics.Debug.WriteLine(lastCheck.Employee);
@@ -438,8 +223,8 @@ namespace Checador
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            StopCapture();
-           // socket.Disconnect();
+            //StopCapture();
+            // socket.Disconnect();
             timer.Stop();
             Application.Exit();
         }
@@ -480,5 +265,525 @@ namespace Checador
 
         }
 
+
+        /// PRUEBA U ARE U 
+        private Reader currentReader;
+        public Reader CurrentReader
+        {
+            get { return currentReader; }
+            set
+            {
+                currentReader = value;
+            }
+        }
+
+        public bool Reset
+        {
+            get { return reset; }
+            set { reset = value; }
+        }
+        private bool reset;
+
+        private ReaderCollection _readers;
+        private Fmd firstFinger;
+        DataResult<Fmd> resultEnrollment;
+        List<Fmd> preenrollmentFmds;
+        int count = 0;
+        private void InitDigitalPersona()
+        {
+
+
+            try
+            {
+                _readers = ReaderCollection.GetReaders();
+
+                // String text = "TODO OK";
+                // String caption = "Conección al lector huella exitosa";
+                // MessageBox.Show(text, caption);
+
+
+                firstFinger = null;
+                resultEnrollment = null;
+                preenrollmentFmds = new List<Fmd>();
+                //pbFingerprint.Image = null;
+                pictureHuella.Image = null;
+                if (CurrentReader != null)
+                {
+                    CurrentReader.Dispose();
+                    CurrentReader = null;
+                }
+                CurrentReader = _readers[0];
+                System.Diagnostics.Debug.WriteLine("READERRRRRRR" + CurrentReader.ToString());
+
+                if (!OpenReader())
+                {
+                    //this.Close();
+                }
+
+                if (!StartCaptureAsync(this.OnCaptured))
+                {
+                    //this.Close();
+                }
+
+                
+            }
+            catch (Exception ex)
+            {
+                //message box:
+                String text = ex.Message;
+                text += "\r\n\r\nPlease check if DigitalPersona service has been started";
+                String caption = "Cannot access readers";
+                MessageBox.Show(text, caption);
+            }
+        }
+
+
+
+        /// Open a device and check result for errors.
+        public bool OpenReader()
+        {
+            using (Tracer tracer = new Tracer("Form_Main::OpenReader"))
+            {
+                reset = false;
+                Constants.ResultCode result = Constants.ResultCode.DP_DEVICE_FAILURE;
+
+                // Open reader
+                result = currentReader.Open(Constants.CapturePriority.DP_PRIORITY_COOPERATIVE);
+
+                if (result != Constants.ResultCode.DP_SUCCESS)
+                {
+                    MessageBox.Show("Error:  " + result);
+                    reset = true;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        /// Hookup capture handler and start capture.
+        public bool StartCaptureAsync(Reader.CaptureCallback OnCaptured)
+        {
+            using (Tracer tracer = new Tracer("Form_Main::StartCaptureAsync"))
+            {
+                // Activate capture handler
+                currentReader.On_Captured += new Reader.CaptureCallback(OnCaptured);
+
+                // Call capture
+                if (!CaptureFingerAsync())
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        /// Function to capture a finger. Always get status first and calibrate or wait if necessary.  Always check status and capture errors.
+        public bool CaptureFingerAsync()
+        {
+            using (Tracer tracer = new Tracer("Form_Main::CaptureFingerAsync"))
+            {
+                try
+                {
+                    GetStatus();
+
+                    Constants.ResultCode captureResult = currentReader.CaptureAsync(Constants.Formats.Fid.ANSI, Constants.CaptureProcessing.DP_IMG_PROC_DEFAULT, currentReader.Capabilities.Resolutions[0]);
+                    if (captureResult != Constants.ResultCode.DP_SUCCESS)
+                    {
+                        reset = true;
+                        throw new Exception("" + captureResult);
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error:  " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        /// Check the device status before starting capture.
+        public void GetStatus()
+        {
+            using (Tracer tracer = new Tracer("Form_Main::GetStatus"))
+            {
+                Constants.ResultCode result = currentReader.GetStatus();
+
+                if ((result != Constants.ResultCode.DP_SUCCESS))
+                {
+                    reset = true;
+                    throw new Exception("" + result);
+                }
+
+                if ((currentReader.Status.Status == Constants.ReaderStatuses.DP_STATUS_BUSY))
+                {
+                    Thread.Sleep(50);
+                }
+                else if ((currentReader.Status.Status == Constants.ReaderStatuses.DP_STATUS_NEED_CALIBRATION))
+                {
+                    currentReader.Calibrate();
+                }
+                else if ((currentReader.Status.Status != Constants.ReaderStatuses.DP_STATUS_READY))
+                {
+                    throw new Exception("Reader Status - " + currentReader.Status.Status);
+                }
+            }
+        }
+
+
+
+
+        /// Handler for when a fingerprint is captured.
+        public void OnCaptured(CaptureResult captureResult)
+           {
+               try
+               {
+
+                //MessageBox.Show("ENTRO AL OnCaptured. Realizar validación" + captureResult.ToString() );
+
+                // Check capture quality and throw an error if bad.
+                if (!CheckCaptureResult(captureResult)) return;
+
+                   // Create bitmap
+                   foreach (Fid.Fiv fiv in captureResult.Data.Views)
+                   {
+                       SendMessage(Action.SendBitmap, CreateBitmap(fiv.RawImage, fiv.Width, fiv.Height));
+                   }
+
+                   //Verification Code
+                   try
+                   {
+                       // Check capture quality and throw an error if bad.
+                       if (!CheckCaptureResult(captureResult)) return;
+
+                    // SendMessage(Action.SendMessage, "A finger was captured.");
+
+                    
+
+                       DataResult<Fmd> resultConversion = FeatureExtraction.CreateFmdFromFid(captureResult.Data, Constants.Formats.Fmd.ANSI);
+                    if (resultConversion.ResultCode != Constants.ResultCode.DP_SUCCESS)
+                       {
+                           if (resultConversion.ResultCode != Constants.ResultCode.DP_TOO_SMALL_AREA)
+                           {
+                               Reset = true;
+                           }
+                           throw new Exception(resultConversion.ResultCode.ToString());
+                       }
+
+                       firstFinger = resultConversion.Data;
+
+                       //SendMessage(Action.SendMessage, firstFinger.ToString());
+
+                       List<string> lstledgerIds = new List<string>();
+                       count = 0;
+
+                    for (int i = 0; i < employees.LongCount(); i++)
+                    {
+                        lstledgerIds.Add(employees[i].Id.ToString());
+
+
+
+
+                        Fmd val = Fmd.DeserializeXml(employees[i].Huella3);
+                        CompareResult compare = Comparison.Compare(firstFinger, 0, val, 0);
+
+
+                        if (compare.ResultCode != Constants.ResultCode.DP_SUCCESS)
+                        {
+                            Reset = true;
+                            //throw new Exception(compare.ResultCode.ToString());
+                            SendMessage(Action.SendMessage, "No se pudo comparar." + compare.ResultCode);
+                        }
+
+                        int PROBABILITY_ONE = 0x7fffffff;
+
+                        if ( compare.Score < (PROBABILITY_ONE / 100000) )
+                        {
+                            SendMessage(Action.SendMessage, "Empleado ID : " + lstledgerIds[i].ToString());
+
+                            count++;
+                            break;
+                        }
+
+
+
+                    }
+                    if (count == 0)
+                       {
+                           SendMessage(Action.SendMessage, "Fingerprint not registered.");
+                       }
+                   }
+                   catch (Exception ex)
+                   {
+                       // Send error message, then close form
+                       SendMessage(Action.SendMessage, "Linea 510 Error:  " + ex.Message);
+
+                   }
+
+
+
+               }
+               catch (Exception ex)
+               {
+                   SendMessage(Action.SendMessage, "Error:  " + ex.Message);
+               }
+        }
+
+
+        public void OnCaptured2(CaptureResult captureResult)
+        {
+            try
+            {
+                // Check capture quality and throw an error if bad.
+                if (!CheckCaptureResult(captureResult)) return;
+
+                // Create bitmap
+                foreach (Fid.Fiv fiv in captureResult.Data.Views)
+                {
+                    SendMessage(Action.SendBitmap, CreateBitmap(fiv.RawImage, fiv.Width, fiv.Height));
+                }
+
+                //Enrollment Code:
+                try
+                {
+                    count++;
+                    // Check capture quality and throw an error if bad.
+                    DataResult<Fmd> resultConversion = FeatureExtraction.CreateFmdFromFid(captureResult.Data, Constants.Formats.Fmd.ANSI);
+
+                    MessageBox.Show("A finger was captured.  \r\nCount:  " + (count));
+
+                    if (resultConversion.ResultCode != Constants.ResultCode.DP_SUCCESS)
+                    {
+                        Reset = true;
+                        throw new Exception(resultConversion.ResultCode.ToString());
+                    }
+
+                    preenrollmentFmds.Add(resultConversion.Data);
+
+                    if (count >= 4)
+                    {
+                        resultEnrollment = DPUruNet.Enrollment.CreateEnrollmentFmd(Constants.Formats.Fmd.ANSI, preenrollmentFmds);
+
+                        if (resultEnrollment.ResultCode == Constants.ResultCode.DP_SUCCESS)
+                        {
+                            preenrollmentFmds.Clear();
+                            count = 0;
+                            //obj_bal_ForAll.BAL_StoreCustomerFPData("tbl_Finger", txtledgerId.Text, Fmd.SerializeXml(resultEnrollment.Data));
+                            MessageBox.Show("Customer Finger Print was successfully enrolled.");
+                            string seriablizable = Fmd.SerializeXml(resultEnrollment.Data);
+                            employeeDao.AddHuella(911, seriablizable);
+
+                            return;
+                        }
+                        else if (resultEnrollment.ResultCode == Constants.ResultCode.DP_ENROLLMENT_INVALID_SET)
+                        {
+                            SendMessage(Action.SendMessage, "Enrollment was unsuccessful.  Please try again.");
+                            preenrollmentFmds.Clear();
+                            count = 0;
+                            return;
+                        }
+                    }
+                    MessageBox.Show("Now place the same finger on the reader.");
+                }
+                catch (Exception ex)
+                {
+                    // Send error message, then close form
+                    SendMessage(Action.SendMessage, "Error:  " + ex.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Send error message, then close form
+                SendMessage(Action.SendMessage, "Error:  " + ex.Message);
+            }
+        }
+
+        /// Create a bitmap from raw data in row/column format.
+        public Bitmap CreateBitmap(byte[] bytes, int width, int height)
+        {
+            byte[] rgbBytes = new byte[bytes.Length * 3];
+
+            for (int i = 0; i <= bytes.Length - 1; i++)
+            {
+                rgbBytes[(i * 3)] = bytes[i];
+                rgbBytes[(i * 3) + 1] = bytes[i];
+                rgbBytes[(i * 3) + 2] = bytes[i];
+            }
+            Bitmap bmp = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+
+            BitmapData data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+
+            for (int i = 0; i <= bmp.Height - 1; i++)
+            {
+                IntPtr p = new IntPtr(data.Scan0.ToInt64() + data.Stride * i);
+                System.Runtime.InteropServices.Marshal.Copy(rgbBytes, i * bmp.Width * 3, p, bmp.Width * 3);
+            }
+
+            bmp.UnlockBits(data);
+            return bmp;
+        }
+
+
+
+
+        /// Check quality of the resulting capture.
+        public bool CheckCaptureResult(CaptureResult captureResult)
+        {
+            using (Tracer tracer = new Tracer("Form_Main::CheckCaptureResult"))
+            {
+                if (captureResult.Data == null || captureResult.ResultCode != Constants.ResultCode.DP_SUCCESS)
+                {
+                    if (captureResult.ResultCode != Constants.ResultCode.DP_SUCCESS)
+                    {
+                        reset = true;
+                        throw new Exception(captureResult.ResultCode.ToString());
+                    }
+
+                    // Send message if quality shows fake finger
+                    if ((captureResult.Quality != Constants.CaptureQuality.DP_QUALITY_CANCELED))
+                    {
+                        throw new Exception("Quality - " + captureResult.Quality);
+                    }
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+
+        private enum Action
+        {
+            UpdateReaderState,
+            SendBitmap,
+            SendMessage
+        }
+        private delegate void SendMessageCallback(Action state, object payload);
+        private void SendMessage(Action action, object payload)
+        {
+            try
+            {
+                if (this.pictureHuella.InvokeRequired)
+                {
+                    SendMessageCallback d = new SendMessageCallback(SendMessage);
+                    this.Invoke(d, new object[] { action, payload });
+                }
+                else
+                {
+                    switch (action)
+                    {
+                        case Action.SendMessage:
+                            MessageBox.Show((string)payload);
+                            break;
+                        case Action.SendBitmap:
+                            pictureHuella.Image = (Bitmap)payload;
+                            pictureHuella.Refresh();
+                            break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+
+
+
+
+
+        private List<Fmd> preEnrollmentFmd, preEnrollmentFmd1;
+        private DataResult<Fmd> enrolledFmd = null;
+
+        private DataResult<Fmd> ExtractFmdfromBmp(Bitmap img)
+        {
+            preEnrollmentFmd = new List<Fmd>();
+            byte[] imageByte = ExtractByteArray(img);
+            int i = 0;
+            //height, width and resolution must be same as those of image in ExtractByteArray
+            DataResult<Fmd> fmd = DPUruNet.FeatureExtraction.CreateFmdFromRaw(imageByte, 0, 1, img.Width, img.Height, CurrentReader.Capabilities.Resolutions[0], Constants.Formats.Fmd.DP_PRE_REGISTRATION);
+            // DataResult<Fmd> fmd = DPUruNet.FeatureExtraction.CreateFmdFromRaw(imageByte, 0, 1, 504, 648, 1000, Constants.Formats.Fmd.DP_PRE_REGISTRATION);
+            if (fmd.ResultCode == Constants.ResultCode.DP_SUCCESS)
+            {
+                while (i < 4)
+                {
+                    preEnrollmentFmd.Add(fmd.Data);
+                    i++;
+                }
+                enrolledFmd = DPUruNet.Enrollment.CreateEnrollmentFmd(Constants.Formats.Fmd.DP_REGISTRATION, preEnrollmentFmd);
+                if (enrolledFmd.ResultCode != Constants.ResultCode.DP_SUCCESS)
+                { MessageBox.Show("fmd.ResultCode = " + fmd.ResultCode); }
+            }
+            else
+                MessageBox.Show("fmd.ResultCode = " + fmd.ResultCode);
+
+            return enrolledFmd;
+        }
+
+
+
+
+
+        private static byte[] ExtractByteArray(Bitmap img)
+        {
+            byte[] rawData = null;
+            byte[] bitData = null;
+            //ToDo: CreateFmdFromRaw only works on 8bpp bytearrays. As such if we have an image with 24bpp then average every 3 values in Bitmapdata and assign it to bitdata
+            if (img.PixelFormat == PixelFormat.Format8bppIndexed)
+            {
+
+                //Lock the bitmap's bits
+                BitmapData bitmapdata = img.LockBits(new System.Drawing.Rectangle(0, 0, img.Width, img.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, img.PixelFormat);
+                //Declare an array to hold the bytes of bitmap
+                byte[] imgData = new byte[bitmapdata.Stride * bitmapdata.Height]; //stride=360, height 392
+
+                //Copy bitmapdata into array
+                Marshal.Copy(bitmapdata.Scan0, imgData, 0, imgData.Length);//imgData.length =141120
+
+                bitData = new byte[bitmapdata.Width * bitmapdata.Height];//ditmapdata.width =357, height = 392
+
+                for (int y = 0; y < bitmapdata.Height; y++)
+                {
+                    for (int x = 0; x < bitmapdata.Width; x++)
+                    {
+                        bitData[bitmapdata.Width * y + x] = imgData[y * bitmapdata.Stride + x];
+                    }
+                }
+
+                rawData = new byte[bitData.Length];
+
+                for (int i = 0; i < bitData.Length; i++)
+                {
+                    int avg = (img.Palette.Entries[bitData[i]].R + img.Palette.Entries[bitData[i]].G + img.Palette.Entries[bitData[i]].B) / 3;
+                    rawData[i] = (byte)avg;
+                }
+            }
+
+            else
+            {
+                bitData = new byte[img.Width * img.Height];//ditmapdata.width =357, height = 392, bitdata.length=139944
+                for (int y = 0; y < img.Height; y++)
+                {
+                    for (int x = 0; x < img.Width; x++)
+                    {
+                        Color pixel = img.GetPixel(x, y);
+                        bitData[img.Width * y + x] = (byte)((Convert.ToInt32(pixel.R) + Convert.ToInt32(pixel.G) + Convert.ToInt32(pixel.B)) / 3);
+                    }
+                }
+
+            }
+
+            return bitData;
+        }
+
+
+        // FIN PRUEBA
+
+        
+
     }
+
 }
