@@ -24,8 +24,8 @@ namespace Checador.Models
         public String Email { get; set; }
         public String CodigoTarjeta { get; set; }
 
-        public DPFP.Sample Huella { get; set; }
-        public string Huella1 { get; set; }
+        public byte[] Huella { get; set; }
+        public string  Huella1 { get; set; }
         public DPUruNet.Fmd Huella2 { get; set; }
         public string Huella3 { get; set; }
         public DateTime FechaIngreso { get; set; }

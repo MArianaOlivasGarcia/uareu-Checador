@@ -164,20 +164,19 @@ namespace Checador.Models
 
                     byte[] b = null;
                     b = (byte[])trabajadores.GetValue(trabajadores.GetOrdinal("huella"));
-                    ms = new System.IO.MemoryStream(b);
+                   
 
-                    DPFP.Sample sample = new DPFP.Sample(ms);
-                    employee.Huella = sample;
-
-                    System.Diagnostics.Debug.WriteLine(sample);
+                    
+                    employee.Huella = b;
 
 
-                    string base64 = Convert.ToBase64String(b);
-                    System.Diagnostics.Debug.WriteLine(base64);
 
-                    byte[] bytes = Convert.FromBase64String(base64);
-                    MemoryStream mssss = new MemoryStream(bytes);
-                    Image image = Image.FromStream(mssss);
+                    // string base64 = Convert.ToBase64String(b);
+                    // System.Diagnostics.Debug.WriteLine(base64);
+
+                    //byte[] bytes = Convert.FromBase64String(base64);
+                    //MemoryStream mssss = new MemoryStream(bytes);
+                    //Image image = Image.FromStream(mssss);
 
 
 
