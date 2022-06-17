@@ -486,9 +486,14 @@ namespace Checador
 
 
 
+                        
+                        // Fmd val = Fmd.DeserializeXml(employees[i].Huella1);
 
-                        Fmd val = Fmd.DeserializeXml(employees[i].Huella3);
-                        CompareResult compare = Comparison.Compare(firstFinger, 0, val, 0);
+                        var conversionFormat = Convert.ToInt32(Constants.Formats.Fmd.DP_REGISTRATION);
+
+                        Fmd fmd = new Fmd(employees[i].Huella, conversionFormat, Constants.WRAPPER_VERSION);
+
+                        CompareResult compare = Comparison.Compare(firstFinger, 0, fmd, 0);
 
 
                         if (compare.ResultCode != Constants.ResultCode.DP_SUCCESS)
